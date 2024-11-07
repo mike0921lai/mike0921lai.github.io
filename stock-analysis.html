@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台股交易策略分析系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        .slider {
+            width: 100%;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            height: 400px;
+        }
+
+        .rules {
+            padding: 20px;
+        }
+
+        .rule-card {
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+        .rule-card.buy {
+            background-color: #d4edda;
+        }
+
+        .rule-card.hold {
+            background-color: #f8d7da;
+        }
+
+        .rule-card h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .rule-card p {
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>台股交易策略分析系統</h1>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="search">搜尋股票</label>
+                <input type="text" id="search" placeholder="輸入股票代碼或名稱">
+            </div>
+
+            <div class="control-group">
+                <label for="industry">選擇產業</label>
+                <select id="industry">
+                    <option value="all">所有產業</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="stock">選擇股票</label>
+                <select id="stock">
+                    <option value="2330">2330 - 台積電</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="period">持有期間（天）</label>
+                <input type="range" id="period" class="slider" min="5" max="30" value="10">
+                <span id="period-value">10天</span>
+            </div>
+
+            <div class="control-group">
+                <label for="confidence">信心水準</label>
+                <input type="range" id="confidence" class="slider" min="10" max="90" value="60">
+                <span id="confidence-value">60%</span>
+            </div>
+        </div>
+
+        <div class="charts">
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="probabilityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="rules" id="rules">
+            <!-- 交易規則會動態插入這裡 -->
+        </div>
+    </div>
+
+    <script>
+        // 股票清單
+        const STOCKS = [
+            { code: '2330', name: '台積電', industry: '半導體' },
+            { code: '2454', name: '聯發科', industry: '半導體' },
+            { code: '2379', name: '瑞昱', industry: '半導體' },
+            { code: '2317', name: '鴻海', industry: '電子' },
+            { code: '2882', name: '國泰金', industry: '金融' },
+            { code: '2881', name: '富邦金', industry: '金融' },
+            { code: '1301', name: '台塑', industry: '傳產製造' },
+            { code: '2002', name: '中鋼', industry: '傳產製造' },
+            { code: '2912', name: '統一超', industry: '零售' }
+        ];
+
+        // 初始化產業選項
+        const industries = ['all', ...new Set(STOCKS.map(stock => stock.industry))];
+        const industrySelect = document.getElementById('industry');
+        industries.forEach(industry => {
+            const option = document.createElement('option');
+            option.value = industry;
+            option.textContent = industry === 'all' ? '所有產業' : industry;
+            industrySelect.appendChild(option);
+        });
+
+        // 初始化股票選項
+        function updateStockOptions(industry = 'all', searchTerm = '') {
+            const stockSelect = document.getElementById('stock');
+            stockSelect.innerHTML = '';
+            
+            let filteredStocks = STOCKS;
+            if (industry !== 'all') {
+                filteredStocks = filteredStocks.filter(stock => stock.industry === industry);
+            }
+            if (searchTerm) {
+                filteredStocks = filteredStocks.filter(stock => 
+                    stock.code.includes(searchTerm) || 
+                    stock.name.includes(searchTerm)
+                );
+            }
+
+            filteredStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.code;
+                option.textContent = `${stock.code} - ${stock.name}`;
+                stockSelect.appendChild(option);
+            });
+        }
+
+        // 生成模擬數據
+        function generateMockData(stockCode) {
+            const basePrice = {
+                '2330': 500,
+                '2454': 800,
+                '2317': 100
+            }[stockCode] || Math.random() * 500 + 50;
+
+            const days = 60;
+            const data = [];
+            let price = basePrice;
+
+            for (let i = 0; i < days; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - (days - i));
+                price = price * (1 + (Math.random() - 0.5) * 0.02);
+                data.push({
+                    date: date.toISOString().split('T')[0],
+                    price: price
+                });
+            }
+
+            return data;
+        }
+
+        // 更新圖表
+        let priceChart = null;
+        let probabilityChart = null;
+
+        function updateCharts(stockCode) {
+            const priceData = generateMockData(stockCode);
+            
+            // 更新價格圖表
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            if (priceChart) priceChart.destroy();
+            
+            priceChart = new Chart(priceCtx, {
+                type: 'line',
+                data: {
+                    labels: priceData.map(d => d.date),
+                    datasets: [{
+                        label: '股價',
+                        data: priceData.map(d => d.price),
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '股價走勢圖'
+                        }
+                    }
+                }
+            });
+
+            // 更新機率圖表
+            const probData = Array(5).fill(0).map(() => ({
+                range: `${Math.floor(Math.random() * 100)}-${Math.floor(Math.random() * 100 + 100)}`,
+                probability: Math.random() * 100
+            }));
+
+            const probCtx = document.getElementById('probabilityChart').getContext('2d');
+            if (probabilityChart) probabilityChart.destroy();
+
+            probabilityChart = new Chart(probCtx, {
+                type: 'bar',
+                data: {
+                    labels: probData.map(d => d.range),
+                    datasets: [{
+                        label: '獲利機率',
+                        data: probData.map(d => d.probability),
+                        backgroundColor: 'rgb(75, 192, 192)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '價格區間獲利機率'
+                        }
+                    }
+                }
+            });
+
+            // 更新交易規則
+            updateRules(probData);
+        }
+
+        // 更新交易規則
+        function updateRules(probData) {
+            const rulesContainer = document.getElementById('rules');
+            rulesContainer.innerHTML = '<h2 style="margin-bottom: 16px;">交易規則</h2>';
+
+            const confidenceThreshold = parseInt(document.getElementById('confidence').value);
+
+            probData.forEach(data => {
+                const isBuySignal = data.probability > confidenceThreshold;
+                const ruleCard = document.createElement('div');
+                ruleCard.className = `rule-card ${isBuySignal ? 'buy' : 'hold'}`;
+                
+                ruleCard.innerHTML = `
+                    <h3>${isBuySignal ? '買進規則' : '觀望規則'}</h3>
+                    <p>價格區間: ${data.range}</p>
+                    <p>獲利機率: ${data.probability.toFixed(1)}%</p>
+                    <p>建議操作: ${isBuySignal ? '可以買入' : '暫時觀望'}</p>
+                `;
+
+                rulesContainer.appendChild(ruleCard);
+            });
+        }
+
+        // 事件監聽器
+        document.getElementById('search').addEventListener('input', (e) => {
+            updateStockOptions(document.getElementById('industry').value, e.target.value);
+        });
+
+        document.getElementById('industry').addEventListener('change', (e) => {
+            updateStockOptions(e.target.value, document.getElementById('search').value);
+        });
+
+        document.getElementById('stock').addEventListener('change', (e) => {
+            updateCharts(e.target.value);
+        });
+
+        document.getElementById('period').addEventListener('input', (e) => {
+            document.getElementById('period-value').textContent = `${e.target.value}天`;
+            updateCharts(document.getElementById('stock').value);
+        });
+
+        document.getElementById('confidence').addEventListener('input', (e) => {
+            document.getElementById('confidence-value').textContent = `${e.target.value}%`;
+            updateCharts(document.getElementById('stock').value);
+        });
+
+        // 初始化
+        updateStockOptions();
+        updateCharts('2330');
+    </script>
+</body>
+</html>
