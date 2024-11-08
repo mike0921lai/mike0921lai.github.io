@@ -227,29 +227,28 @@
             });
         }
 
-        // 生成模擬數據
-        function generateMockData(stockCode) {
-            const basePrice = {
-                '2330': 500,
-                '2454': 800,
-                '2317': 100
-            }[stockCode] || Math.random() * 500 + 50;
+      
+        // 生成真實數據
+        async function fetchStockData(stockCode) {
+            try {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - 60);
 
-            const days = 60;
-            const data = [];
-            let price = basePrice;
-
-            for (let i = 0; i < days; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() - (days - i));
-                price = price * (1 + (Math.random() - 0.5) * 0.02);
-                data.push({
-                    date: date.toISOString().split('T')[0],
-                    price: price
-                });
+                const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stockCode}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch data');
+                
+                const data = await response.json();
+                return data.data.map(item => ({
+                    date: item.date,
+                    price: item.close
+                }));
+            } catch (error) {
+                console.error('Error fetching real stock data:', error);
+                return generateMockData(stockCode); // 如API失敗則使用模擬數據
             }
-
-            return data;
         }
 
         // 更新圖表
