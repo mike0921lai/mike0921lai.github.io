@@ -1,68 +1,54 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股票分析工具</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>台股交易策略分析系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <h1>台股交易策略分析系統</h1>
+            <p>選擇股票、設定參數，系統會根據歷史數據生成交易建議</p>
         </div>
 
-        <div class="controls">
-            <div class="control-group">
-                <label for="search">搜尋股票</label>
-                <input type="text" id="search" placeholder="輸入股票代碼或名稱">
-            </div>
-
-            <div class="control-group">
-                <label for="industry">選擇產業</label>
-                <select id="industry">
-                    <option value="all">所有產業</option>
+        <div class="control-panel">
+            <div class="form-group">
+                <label for="stock-select">選擇股票:</label>
+                <select id="stock-select">
+                    <option value="2330">2330 - 台積電</option>
+                    <option value="2317">2317 - 鴻海</option>
                 </select>
             </div>
 
-            <div class="control-group">
-                <label for="stock-select">選擇股票</label>
-                <select id="stock-select" required>
-                    <option value="">請選擇股票</option>
-                </select>
+            <div class="form-group">
+                <label for="holding-period">持有期間（天）:</label>
+                <input type="range" id="holding-period" min="5" max="30" value="10" step="1">
+                <span class="range-value" id="holding-period-value">10天</span>
             </div>
 
-            <div class="control-group">
-                <label for="period">持有期間（天）</label>
-                <input type="range" id="period" name="period" class="slider" 
-                       min="5" max="30" value="10" step="1" 
-                       aria-valuemin="5" aria-valuemax="30">
-                <output for="period" id="period-value">10天</output>
+            <div class="form-group">
+                <label for="confidence">信心水準:</label>
+                <input type="range" id="confidence" min="0.1" max="0.9" value="0.6" step="0.1">
+                <span class="range-value" id="confidence-value">0.6</span>
             </div>
 
-            <div class="control-group">
-                <label for="confidence">信心水準</label>
-                <input type="range" id="confidence" name="confidence" class="slider" 
-                       min="10" max="90" value="60" step="5" 
-                       aria-valuemin="10" aria-valuemax="90">
-                <output for="confidence" id="confidence-value">60%</output>
-            </div>
+            <button onclick="analyzeStock()">開始分析</button>
         </div>
 
-        <div class="charts">
+        <div class="results">
+            <div class="trading-rules" id="trading-rules"></div>
             <div class="chart-container">
-                <canvas id="priceChart" role="img" aria-label="價格走勢圖"></canvas>
+                <canvas id="priceChart"></canvas>
+                <canvas id="probabilityChart"></canvas>
             </div>
-            <div class="chart-container">
-                <canvas id="probabilityChart" role="img" aria-label="機率分佈圖"></canvas>
-            </div>
-        </div>
-
-        <div class="rules" id="rules" aria-live="polite">
-            <!-- 交易規則會動態插入這裡 -->
         </div>
     </div>
     <script src="js/main.js"></script>
 </body>
+
 </html>
