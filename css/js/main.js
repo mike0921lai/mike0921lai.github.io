@@ -1,4 +1,4 @@
- // 股票清單
+// 股票清單
  const STOCKS = [
     { code: '2330', name: '台積電', industry: '半導體' },
     { code: '2454', name: '聯發科', industry: '半導體' },
@@ -215,5 +215,6 @@ document.getElementById('confidence').addEventListener('input', (e) => {
 });
 
 // 初始化
-updateStockOptions();
+const defaultIndustry = document.getElementById('industry').value || '';
+updateStockOptions(defaultIndustry, '');
 updateCharts('2330');
