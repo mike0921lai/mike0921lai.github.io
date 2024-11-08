@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台股交易策略分析系統</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <title>股票分析工具</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -27,35 +27,35 @@
             </div>
 
             <div class="control-group">
-                <label for="stock">選擇股票</label>
-                <select id="stock">
-                    <option value="2330">2330 - 台積電</option>
+                <label for="stock-select">選擇股票</label>
+                <select id="stock-select" required>
+                    <option value="">請選擇股票</option>
                 </select>
             </div>
 
             <div class="control-group">
                 <label for="period">持有期間（天）</label>
-                <input type="range" id="period" class="slider" min="5" max="30" value="10">
+                <input type="range" id="period" class="slider" min="5" max="30" value="10" step="1" aria-valuemin="5" aria-valuemax="30">
                 <span id="period-value">10天</span>
             </div>
 
             <div class="control-group">
                 <label for="confidence">信心水準</label>
-                <input type="range" id="confidence" class="slider" min="10" max="90" value="60">
+                <input type="range" id="confidence" class="slider" min="10" max="90" value="60" step="5" aria-valuemin="10" aria-valuemax="90">
                 <span id="confidence-value">60%</span>
             </div>
         </div>
 
         <div class="charts">
             <div class="chart-container">
-                <canvas id="priceChart"></canvas>
+                <canvas id="priceChart" role="img" aria-label="價格走勢圖"></canvas>
             </div>
             <div class="chart-container">
-                <canvas id="probabilityChart"></canvas>
+                <canvas id="probabilityChart" role="img" aria-label="機率分佈圖"></canvas>
             </div>
         </div>
 
-        <div class="rules" id="rules">
+        <div class="rules" id="rules" aria-live="polite">
             <!-- 交易規則會動態插入這裡 -->
         </div>
     </div>
