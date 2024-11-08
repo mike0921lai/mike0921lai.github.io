@@ -1,20 +1,95 @@
-// 模擬數據生成函數
-function generateMockData(days = 365) {
-    const data = [];
-    let price = 100;
-    const today = new Date();
-
-    for (let i = 0; i < days; i++) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - (days - i));
-
-        price = price * (1 + (Math.random() - 0.5) * 0.02);
-        data.push({
-            date: date,
-            price: price
-        });
+// 驗證股票數據的輔助函數
+function validateStockData(data) {
+    if (!data?.chart?.result?.[0]?.timestamp || !data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close) {
+        throw new Error('Invalid stock data structure');
     }
-    return data;
+}
+
+// 延遲函數
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// 自定義錯誤類別
+class StockAPIError extends Error {
+    constructor(message, status, symbol) {
+        super(message);
+        this.name = 'StockAPIError';
+        this.status = status;
+        this.symbol = symbol;
+    }
+}
+
+// 改進的 fetchHistoricalData 函數
+async function fetchHistoricalData(symbol, days = 365, maxRetries = 3) {
+    let lastError;
+    const endDate = Math.floor(Date.now() / 1000);
+    const startDate = endDate - (days * 24 * 60 * 60);
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`正在進行第 ${attempt} 次請求: ${symbol}`);
+            
+            const response = await fetch(
+                `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startDate}&period2=${endDate}&interval=1d`
+            );
+            
+            // 處理不同的 HTTP 狀態碼
+            if (!response.ok) {
+                switch (response.status) {
+                    case 404:
+                        throw new StockAPIError(`找不到股票代號 ${symbol}`, response.status, symbol);
+                    case 429:
+                        throw new StockAPIError('請求過於頻繁，請稍後再試', response.status, symbol);
+                    case 500:
+                        throw new StockAPIError('Yahoo Finance API 服務器錯誤', response.status, symbol);
+                    default:
+                        throw new StockAPIError(`HTTP 錯誤: ${response.status}`, response.status, symbol);
+                }
+            }
+
+            const data = await response.json();
+            
+            try {
+                validateStockData(data);
+            } catch (error) {
+                throw new StockAPIError(`數據格式錯誤: ${error.message}`, 'DATA_INVALID', symbol);
+            }
+
+            // 格式化數據
+            const timestamps = data.chart.result[0].timestamp;
+            const prices = data.chart.result[0].indicators.quote[0].close;
+            
+            return timestamps.map((timestamp, index) => ({
+                date: new Date(timestamp * 1000),
+                price: prices[index]
+            })).filter(item => item.price !== null);
+            
+        } catch (error) {
+            lastError = error;
+            console.warn(`第 ${attempt} 次請求失敗:`, {
+                symbol,
+                error: error.message,
+                status: error.status,
+                timestamp: new Date().toISOString()
+            });
+
+            // 根據錯誤類型決定是否重試
+            if (error.status === 404) {
+                throw error; // 404 錯誤不需要重試
+            }
+
+            if (attempt < maxRetries) {
+                const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // 指數退避，最多等待10秒
+                console.log(`等待 ${waitTime/1000} 秒後重試...`);
+                await delay(waitTime);
+            }
+        }
+    }
+    
+    throw new StockAPIError(
+        `在 ${maxRetries} 次嘗試後仍無法獲取數據: ${lastError.message}`,
+        'MAX_RETRIES_EXCEEDED',
+        symbol
+    );
 }
 
 // 更新範圍值顯示
@@ -147,12 +222,29 @@ function updateCharts(historicalData, intervals) {
                 title: {
                     display: true,
                     text: '各價格區間獲利機率分析'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: '機率 (%)'
+                    },
+                    ticks: {
+                        callback: value => value + '%'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: '價格區間'
+                    }
                 }
             }
         }
@@ -161,3 +253,73 @@ function updateCharts(historicalData, intervals) {
 
 // 初始化分析
 analyzeStock();
+
+        async function getStockList() {
+            const defaultStocks = [["2330", "台積電"], ["2317", "鴻海"]];
+            
+            try {
+                const url = "https://isin.twse.com.tw/isin/C_public.jsp?strMode=2";
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    console.error(`無法連接到證交所網站，狀態碼：${response.status}`);
+                    return defaultStocks;
+                }
+                
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const table = doc.querySelector('table');
+                
+                if (!table) {
+                    throw new Error('找不到股票資料表格');
+                }
+
+                const stocks = Array.from(table.querySelectorAll('tr'))
+                    .slice(1) // 跳過表頭
+                    .map(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length >= 2) {
+                            const code = cells[2]?.textContent?.trim();
+                            const name = cells[3]?.textContent?.trim();
+                            if (code && name) return [code, name];
+                        }
+                        return null;
+                    })
+                    .filter(stock => stock !== null);
+
+                return stocks.length > 0 ? stocks : defaultStocks;
+                
+            } catch (error) {
+                console.error(`處理股票列表時發生錯誤：${error}`);
+                return defaultStocks;
+            }
+        }
+
+// 使用範例
+async function fetchStockDataSafely(symbol) {
+    try {
+        const data = await fetchHistoricalData(symbol);
+        console.log(`成功獲取 ${symbol} 的數據`);
+        return data;
+    } catch (error) {
+        if (error instanceof StockAPIError) {
+            console.error(`股票 API 錯誤 (${symbol}):`, {
+                message: error.message,
+                status: error.status,
+                symbol: error.symbol
+            });
+        } else {
+            console.error(`未預期的錯誤 (${symbol}):`, error);
+        }
+        return null;
+    }
+}
+
+// 使用改進後的錯誤處理
+fetchStockDataSafely('2330.TW')
+    .then(data => {
+        if (data) {
+            console.log('數據獲取成功');
+        }
+    });
