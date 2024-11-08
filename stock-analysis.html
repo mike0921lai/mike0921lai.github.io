@@ -35,14 +35,18 @@
 
             <div class="control-group">
                 <label for="period">持有期間（天）</label>
-                <input type="range" id="period" class="slider" min="5" max="30" value="10" step="1" aria-valuemin="5" aria-valuemax="30">
-                <span id="period-value">10天</span>
+                <input type="range" id="period" name="period" class="slider" 
+                       min="5" max="30" value="10" step="1" 
+                       aria-valuemin="5" aria-valuemax="30">
+                <output for="period" id="period-value">10天</output>
             </div>
 
             <div class="control-group">
                 <label for="confidence">信心水準</label>
-                <input type="range" id="confidence" class="slider" min="10" max="90" value="60" step="5" aria-valuemin="10" aria-valuemax="90">
-                <span id="confidence-value">60%</span>
+                <input type="range" id="confidence" name="confidence" class="slider" 
+                       min="10" max="90" value="60" step="5" 
+                       aria-valuemin="10" aria-valuemax="90">
+                <output for="confidence" id="confidence-value">60%</output>
             </div>
         </div>
 
