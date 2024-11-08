@@ -143,23 +143,39 @@
 
             <div class="control-group">
                 <label for="period">持有期間（天）</label>
-                <input type="range" id="period" class="slider" min="5" max="30" value="10">
+                <input type="range" id="period" 
+                       class="slider" 
+                       min="5" 
+                       max="30" 
+                       value="10"
+                       aria-label="調整持有期間"
+                       aria-valuemin="5"
+                       aria-valuemax="30"
+                       aria-valuenow="10">
                 <span id="period-value">10天</span>
             </div>
 
             <div class="control-group">
                 <label for="confidence">信心水準</label>
-                <input type="range" id="confidence" class="slider" min="10" max="90" value="60">
+                <input type="range" id="confidence" 
+                       class="slider" 
+                       min="10" 
+                       max="90" 
+                       value="60"
+                       aria-label="調整信心水準"
+                       aria-valuemin="10"
+                       aria-valuemax="90"
+                       aria-valuenow="60">
                 <span id="confidence-value">60%</span>
             </div>
         </div>
 
         <div class="charts">
             <div class="chart-container">
-                <canvas id="priceChart"></canvas>
+                <canvas id="priceChart" aria-label="股價走勢圖"></canvas>
             </div>
             <div class="chart-container">
-                <canvas id="probabilityChart"></canvas>
+                <canvas id="probabilityChart" aria-label="機率分析圖"></canvas>
             </div>
         </div>
 
@@ -171,16 +187,11 @@
     <script>
         // 股票清單
         const STOCKS = [
-            { code: '2330', name: '台積電', industry: '半導體' },
-            { code: '2454', name: '聯發科', industry: '半導體' },
-            { code: '2379', name: '瑞昱', industry: '半導體' },
-            { code: '2317', name: '鴻海', industry: '電子' },
-            { code: '2882', name: '國泰金', industry: '金融' },
-            { code: '2881', name: '富邦金', industry: '金融' },
-            { code: '1301', name: '台塑', industry: '傳產製造' },
-            { code: '2002', name: '中鋼', industry: '傳產製造' },
-            { code: '2912', name: '統一超', industry: '零售' }
-        ];
+            { code: '2330', name: '台積電', industry: '半導體', market: 'TSE', lastPrice: 0 },
+            { code: '2454', name: '聯發科', industry: '半導體', market: 'TSE', lastPrice: 0 },
+            { code: '2379', name: '瑞昱', industry: '半導體', market: 'TSE', lastPrice: 0 },
+            { code: '2317', name: '鴻海', industry: '電子', market: 'TSE', lastPrice: 0 }
+        ].sort((a, b) => a.code.localeCompare(b.code));
 
         // 初始化產業選項
         const industries = ['all', ...new Set(STOCKS.map(stock => stock.industry))];
@@ -245,7 +256,8 @@
         let priceChart = null;
         let probabilityChart = null;
 
-        function updateCharts(stockCode) {
+        async function updateCharts(stockCode) {
+            const stockData = await fetchStockData(stockCode);
             const priceData = generateMockData(stockCode);
 
             // 更新價格圖表
@@ -374,12 +386,6 @@
             console.error('Error fetching stock data:', error);
             return generateMockData(stockCode); // 如API失敗則使用模擬數據
         }
-    }
-
-    // 修改updateCharts函數為非同步
-    async function updateCharts(stockCode) {
-        const stockData = await fetchStockData(stockCode);
-        // ... 其餘圖表更新邏輯保持不變 ...
     }
 
     // 修改updateStockOptions函數以從API獲取股票列表
