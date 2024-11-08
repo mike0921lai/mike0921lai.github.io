@@ -239,13 +239,21 @@ function updateRules(probData) {
     });
 }
 
-// 事件監聽器
+// 更新股票選項後更新圖表
+function updateStockOptionsAndChart(industry, searchText) {
+    updateStockOptions(industry, searchText);
+    const stockSelect = document.getElementById('stock');
+    if (stockSelect.options.length > 0) {
+        updateCharts(stockSelect.value);
+    }
+}
+
 document.getElementById('search').addEventListener('input', (e) => {
-    updateStockOptions(document.getElementById('industry').value, e.target.value);
+    updateStockOptionsAndChart(document.getElementById('industry').value, e.target.value);
 });
 
 document.getElementById('industry').addEventListener('change', (e) => {
-    updateStockOptions(e.target.value, document.getElementById('search').value);
+    updateStockOptionsAndChart(e.target.value, document.getElementById('search').value);
 });
 
 document.getElementById('stock').addEventListener('change', (e) => {
@@ -264,5 +272,4 @@ document.getElementById('confidence').addEventListener('input', (e) => {
 
 // 初始化
 const defaultIndustry = document.getElementById('industry').value || '';
-updateStockOptions(defaultIndustry, '');
-updateCharts('2330');
+updateStockOptionsAndChart(defaultIndustry, '');
