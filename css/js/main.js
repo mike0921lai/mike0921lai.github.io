@@ -69,6 +69,35 @@ function generateMockData(stockCode) {
 
     return data;
 }
+// 從 API 獲取股票數據
+async function fetchStockData(stockCode) {
+    try {
+        const apiUrl = `https://api.finmindtrade.com/api/v4/data`;
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dataset: 'TaiwanStockPrice',
+                data_id: stockCode,
+                start_date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                end_date: new Date().toISOString().split('T')[0]
+            })
+        });
+
+        const data = await response.json();
+        if (!data.data) return [];
+
+        return data.data.map(item => ({
+            date: item.date,
+            price: item.close
+        }));
+    } catch (error) {
+        console.error('Error fetching stock data:', error);
+        return generateMockData(stockCode); // 如果 API 失敗則回退到模擬數據
+    }
+}
 
 // 更新圖表
 let priceChart = null;
