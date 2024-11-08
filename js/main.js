@@ -100,6 +100,53 @@ async function fetchStockData(stockCode) {
     }
 }
 
+// 從 Yahoo Finance 獲取股票資料
+async function getStockData(stockCode) {
+    try {
+        // 轉換股票代碼格式 (加上.TW)
+        const symbol = `${stockCode}.TW`;
+        
+        // 設定時間範圍
+        const endDate = Math.floor(Date.now() / 1000);
+        const startDate = endDate - (60 * 24 * 60 * 60); // 60天前
+        
+        // 呼叫 Yahoo Finance API
+        const response = await fetch(
+            `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startDate}&period2=${endDate}&interval=1d`
+        );
+        
+        if (!response.ok) {
+            throw new Error('無法取得股票資料');
+        }
+
+        const data = await response.json();
+        const timestamps = data.chart.result[0].timestamp;
+        const quotes = data.chart.result[0].indicators.quote[0];
+        
+        // 整理資料格式
+        return timestamps.map((time, index) => ({
+            date: new Date(time * 1000),
+            price: quotes.close[index],
+            volume: quotes.volume[index]
+        })).filter(item => item.price !== null);
+
+    } catch (error) {
+        console.error('取得股票資料失敗:', error);
+        return [];
+    }
+}
+
+// 更新圖表資料
+async function updateChartData(stockCode) {
+    const stockData = await getStockData(stockCode);
+    if (stockData.length > 0) {
+        // 這裡需要配合您的圖表更新邏輯
+        updateChart(stockData);
+    } else {
+        console.error('無法取得股票資料');
+    }
+}
+
 // 更新圖表
 let priceChart = null;
 let probabilityChart = null;
