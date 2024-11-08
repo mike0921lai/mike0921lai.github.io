@@ -274,20 +274,40 @@ elements.stock?.addEventListener('change', (e) => {
     }
 });
 
-elements.period?.addEventListener('input', (e) => {
-    elements.periodValue.textContent = `${e.target.value}天`;
-    if (elements.stock?.value) {
-        updateCharts(elements.stock.value);
+// 共用的更新函數
+const handleInputChange = (element, suffix, value) => {
+    if (element && value !== undefined) {
+        element.textContent = `${value}${suffix}`;
+    }
+};
+
+// 檢查並更新圖表
+const safeUpdateCharts = (stockValue) => {
+    if (stockValue) {
+        updateCharts(stockValue);
+    }
+};
+
+// 期間輸入事件監聽
+if (elements.period && elements.periodValue) {
+    elements.period.addEventListener('input', (e) => {
+        handleInputChange(elements.periodValue, '天', e.target.value);
+        safeUpdateCharts(elements.stock?.value);
+    });
+}
+
+// 信心水準輸入事件監聽
+if (elements.confidence && elements.confidenceValue) {
+    elements.confidence.addEventListener('input', (e) => {
+        handleInputChange(elements.confidenceValue, '%', e.target.value);
+        safeUpdateCharts(elements.stock?.value);
+    });
+}
+
+// 安全的初始化
+document.addEventListener('DOMContentLoaded', () => {
+    if (elements.industry) {
+        const defaultIndustry = elements.industry.value || '';
+        updateStockOptionsAndChart(defaultIndustry, '');
     }
 });
-
-elements.confidence?.addEventListener('input', (e) => {
-    elements.confidenceValue.textContent = `${e.target.value}%`;
-    if (elements.stock?.value) {
-        updateCharts(elements.stock.value);
-    }
-});
-
-// 初始化
-const defaultIndustry = elements.industry?.value || '';
-updateStockOptionsAndChart(defaultIndustry, '');
