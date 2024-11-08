@@ -239,37 +239,55 @@ function updateRules(probData) {
     });
 }
 
-// 更新股票選項後更新圖表
+// DOM 元素快取
+const elements = {
+    industry: document.getElementById('industry'),
+    search: document.getElementById('search'),
+    stock: document.getElementById('stock'),
+    period: document.getElementById('period'),
+    periodValue: document.getElementById('period-value'),
+    confidence: document.getElementById('confidence'),
+    confidenceValue: document.getElementById('confidence-value')
+};
+
+// 整合更新函數
 function updateStockOptionsAndChart(industry, searchText) {
     updateStockOptions(industry, searchText);
-    const stockSelect = document.getElementById('stock');
-    if (stockSelect.options.length > 0) {
-        updateCharts(stockSelect.value);
+    
+    if (elements.stock && elements.stock.options.length > 0) {
+        updateCharts(elements.stock.value);
     }
 }
 
-document.getElementById('search').addEventListener('input', (e) => {
-    updateStockOptionsAndChart(document.getElementById('industry').value, e.target.value);
+// 事件監聽器
+elements.search?.addEventListener('input', (e) => {
+    updateStockOptionsAndChart(elements.industry?.value || '', e.target.value);
 });
 
-document.getElementById('industry').addEventListener('change', (e) => {
-    updateStockOptionsAndChart(e.target.value, document.getElementById('search').value);
+elements.industry?.addEventListener('change', (e) => {
+    updateStockOptionsAndChart(e.target.value, elements.search?.value || '');
 });
 
-document.getElementById('stock').addEventListener('change', (e) => {
-    updateCharts(e.target.value);
+elements.stock?.addEventListener('change', (e) => {
+    if (e.target.value) {
+        updateCharts(e.target.value);
+    }
 });
 
-document.getElementById('period').addEventListener('input', (e) => {
-    document.getElementById('period-value').textContent = `${e.target.value}天`;
-    updateCharts(document.getElementById('stock').value);
+elements.period?.addEventListener('input', (e) => {
+    elements.periodValue.textContent = `${e.target.value}天`;
+    if (elements.stock?.value) {
+        updateCharts(elements.stock.value);
+    }
 });
 
-document.getElementById('confidence').addEventListener('input', (e) => {
-    document.getElementById('confidence-value').textContent = `${e.target.value}%`;
-    updateCharts(document.getElementById('stock').value);
+elements.confidence?.addEventListener('input', (e) => {
+    elements.confidenceValue.textContent = `${e.target.value}%`;
+    if (elements.stock?.value) {
+        updateCharts(elements.stock.value);
+    }
 });
 
 // 初始化
-const defaultIndustry = document.getElementById('industry').value || '';
+const defaultIndustry = elements.industry?.value || '';
 updateStockOptionsAndChart(defaultIndustry, '');
