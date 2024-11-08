@@ -193,41 +193,86 @@
             { code: '2317', name: '鴻海', industry: '電子', market: 'TSE', lastPrice: 0 }
         ].sort((a, b) => a.code.localeCompare(b.code));
 
-        // 初始化產業選項
-        const industries = ['all', ...new Set(STOCKS.map(stock => stock.industry))];
-        const industrySelect = document.getElementById('industry');
-        industries.forEach(industry => {
-            const option = document.createElement('option');
-            option.value = industry;
-            option.textContent = industry === 'all' ? '所有產業' : industry;
-            industrySelect.appendChild(option);
-        });
+        // 防抖函數
+        const debounce = (fn, delay) => {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        };
 
-        // 初始化股票選項
+        // 初始化產業選項
+        function initIndustryOptions(stocks) {
+            const industrySelect = document.getElementById('industry');
+            const industries = ['all', ...new Set(stocks.map(stock => stock.industry))];
+            
+            const fragment = document.createDocumentFragment();
+            industries.forEach(industry => {
+                const option = document.createElement('option');
+                option.value = industry;
+                option.textContent = industry === 'all' ? '所有產業' : industry;
+                fragment.appendChild(option);
+            });
+            
+            industrySelect.innerHTML = '';
+            industrySelect.appendChild(fragment);
+        }
+
+        // 更新股票選項
         function updateStockOptions(industry = 'all', searchTerm = '') {
             const stockSelect = document.getElementById('stock');
+            const loadingOption = document.createElement('option');
+            loadingOption.textContent = '載入中...';
             stockSelect.innerHTML = '';
+            stockSelect.appendChild(loadingOption);
 
-            let filteredStocks = STOCKS;
-            if (industry !== 'all') {
-                filteredStocks = filteredStocks.filter(stock => stock.industry === industry);
-            }
-            if (searchTerm) {
-                filteredStocks = filteredStocks.filter(stock =>
-                    stock.code.includes(searchTerm) ||
-                    stock.name.includes(searchTerm)
-                );
-            }
+            // 使用 requestAnimationFrame 避免阻塞UI
+            requestAnimationFrame(() => {
+                try {
+                    const fragment = document.createDocumentFragment();
+                    let filteredStocks = [...STOCKS];
 
-            filteredStocks.forEach(stock => {
-                const option = document.createElement('option');
-                option.value = stock.code;
-                option.textContent = `${stock.code} - ${stock.name}`;
-                stockSelect.appendChild(option);
+                    // 篩選邏輯
+                    if (industry !== 'all') {
+                        filteredStocks = filteredStocks.filter(stock => stock.industry === industry);
+                    }
+                    
+                    if (searchTerm) {
+                        const searchRegex = new RegExp(searchTerm, 'i');
+                        filteredStocks = filteredStocks.filter(stock =>
+                            searchRegex.test(stock.code) || 
+                            searchRegex.test(stock.name)
+                        );
+                    }
+
+                    // 排序
+                    filteredStocks.sort((a, b) => a.code.localeCompare(b.code));
+
+                    if (filteredStocks.length === 0) {
+                        const noResultOption = document.createElement('option');
+                        noResultOption.textContent = '無符合條件的股票';
+                        noResultOption.disabled = true;
+                        fragment.appendChild(noResultOption);
+                    } else {
+                        filteredStocks.forEach(stock => {
+                            const option = document.createElement('option');
+                            option.value = stock.code;
+                            option.textContent = `${stock.code} - ${stock.name}`;
+                            option.dataset.industry = stock.industry;
+                            fragment.appendChild(option);
+                        });
+                    }
+
+                    stockSelect.innerHTML = '';
+                    stockSelect.appendChild(fragment);
+                } catch (error) {
+                    console.error('更新股票選項時發生錯誤:', error);
+                    stockSelect.innerHTML = '<option>載入失敗，請重試</option>';
+                }
             });
         }
 
-      
         // 生成真實數據
         async function fetchStockData(stockCode) {
             try {
@@ -345,13 +390,16 @@
         }
 
         // 事件監聽器
-        document.getElementById('search').addEventListener('input', (e) => {
-            updateStockOptions(document.getElementById('industry').value, e.target.value);
-        });
+        document.getElementById('search').addEventListener('input', 
+            debounce((e) => updateStockOptions(
+                document.getElementById('industry').value, 
+                e.target.value
+            ), 300)
+        );
 
-        document.getElementById('industry').addEventListener('change', (e) => {
-            updateStockOptions(e.target.value, document.getElementById('search').value);
-        });
+        document.getElementById('industry').addEventListener('change', (e) => 
+            updateStockOptions(e.target.value, document.getElementById('search').value)
+        );
 
         document.getElementById('stock').addEventListener('change', (e) => {
             updateCharts(e.target.value);
@@ -395,7 +443,7 @@
             return await response.json();
         } catch (error) {
             console.error('Error fetching stock list:', error);
-            return STOCKS; // 如API失敗則使用預設資料
+            return STOCKS; // 如API失敗則使用��設資料
         }
     }
 </script>
