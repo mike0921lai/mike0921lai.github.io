@@ -1,5 +1,5 @@
 // 股票清單
- const STOCKS = [
+const STOCKS = [
     { code: '2330', name: '台積電', industry: '半導體' },
     { code: '2454', name: '聯發科', industry: '半導體' },
     { code: '2379', name: '瑞昱', industry: '半導體' },
@@ -31,9 +31,10 @@ function updateStockOptions(industry = 'all', searchTerm = '') {
         filteredStocks = filteredStocks.filter(stock => stock.industry === industry);
     }
     if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
         filteredStocks = filteredStocks.filter(stock => 
-            stock.code.includes(searchTerm) || 
-            stock.name.includes(searchTerm)
+            stock.code.toLowerCase().includes(searchLower) || 
+            stock.name.toLowerCase().includes(searchLower)
         );
     }
 
