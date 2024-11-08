@@ -311,3 +311,45 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStockOptionsAndChart(defaultIndustry, '');
     }
 });
+
+// main.js
+document.addEventListener('DOMContentLoaded', function() {
+    // 價格走勢圖
+    const priceCtx = document.getElementById('priceChart').getContext('2d');
+    const priceChart = new Chart(priceCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '股價走勢',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // 機率分布圖
+    const probCtx = document.getElementById('probabilityChart').getContext('2d');
+    const probChart = new Chart(probCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '機率分布',
+                data: [],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgb(75, 192, 192)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+});
