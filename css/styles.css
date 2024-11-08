@@ -15,11 +15,90 @@ body {
     margin: 0 auto;
     background-color: white;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 20px;
 }
 
 .header {
     padding: 20px;
     border-bottom: 1px solid #eee;
+}
+
+.header h1 {
+    font-size: 24px;
+    color: #333;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+}
+
+select, input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.slider {
+    width: 100%;
+}
+
+.charts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.chart-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    height: 400px;
+}
+
+.rules {
+    padding: 20px;
+}
+
+.rule-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+}
+
+.rule-card.buy {
+    background-color: #d4edda;
+}
+
+.rule-card.hold {
+    background-color: #f8d7da;
+}
+
+.rule-card h3 {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.rule-card p {
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #666;
 }

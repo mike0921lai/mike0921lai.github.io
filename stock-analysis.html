@@ -9,10 +9,55 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
+        <div class="header">
             <h1>台股交易策略分析系統</h1>
-        </header>
-        <!-- 其他 HTML 內容 -->
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="search">搜尋股票</label>
+                <input type="text" id="search" placeholder="輸入股票代碼或名稱">
+            </div>
+
+            <div class="control-group">
+                <label for="industry">選擇產業</label>
+                <select id="industry">
+                    <option value="all">所有產業</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="stock">選擇股票</label>
+                <select id="stock">
+                    <option value="2330">2330 - 台積電</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="period">持有期間（天）</label>
+                <input type="range" id="period" class="slider" min="5" max="30" value="10">
+                <span id="period-value">10天</span>
+            </div>
+
+            <div class="control-group">
+                <label for="confidence">信心水準</label>
+                <input type="range" id="confidence" class="slider" min="10" max="90" value="60">
+                <span id="confidence-value">60%</span>
+            </div>
+        </div>
+
+        <div class="charts">
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="probabilityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="rules" id="rules">
+            <!-- 交易規則會動態插入這裡 -->
+        </div>
     </div>
     <script src="js/main.js"></script>
 </body>
