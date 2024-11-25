@@ -261,6 +261,7 @@ function updateCharts(historicalData, intervals) {
 // 初始化分析
 analyzeStock();
 
+<<<<<<< HEAD
 async function getStockList() {
     const defaultStocks = [["2330", "台積電"], ["2317", "鴻海"]];
     
@@ -340,3 +341,57 @@ fetchStockDataSafely('2330.TW')
     .catch(error => {
         console.error('處理數據時發生錯誤:', error);
     });
+=======
+    const confidenceThreshold = parseInt(document.getElementById('confidence').value);
+
+    probData.forEach(data => {
+        const isBuySignal = data.probability > confidenceThreshold;
+        const ruleCard = document.createElement('div');
+        ruleCard.className = `rule-card ${isBuySignal ? 'buy' : 'hold'}`;
+        
+        ruleCard.innerHTML = `
+            <h3>${isBuySignal ? '買進規則' : '觀望規則'}</h3>
+            <p>價格區間: ${data.range}</p>
+            <p>獲利機率: ${data.probability.toFixed(1)}%</p>
+            <p>建議操作: ${isBuySignal ? '可以買入' : '暫時觀望'}</p>
+        `;
+
+        rulesContainer.appendChild(ruleCard);
+    });
+}
+
+// 更新股票選項後更新圖表
+function updateStockOptionsAndChart(industry, searchText) {
+    updateStockOptions(industry, searchText);
+    const stockSelect = document.getElementById('stock');
+    if (stockSelect.options.length > 0) {
+        updateCharts(stockSelect.value);
+    }
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+    updateStockOptionsAndChart(document.getElementById('industry').value, e.target.value);
+});
+
+document.getElementById('industry').addEventListener('change', (e) => {
+    updateStockOptionsAndChart(e.target.value, document.getElementById('search').value);
+});
+
+document.getElementById('stock').addEventListener('change', (e) => {
+    updateCharts(e.target.value);
+});
+
+document.getElementById('period').addEventListener('input', (e) => {
+    document.getElementById('period-value').textContent = `${e.target.value}天`;
+    updateCharts(document.getElementById('stock').value);
+});
+
+document.getElementById('confidence').addEventListener('input', (e) => {
+    document.getElementById('confidence-value').textContent = `${e.target.value}%`;
+    updateCharts(document.getElementById('stock').value);
+});
+
+// 初始化
+const defaultIndustry = document.getElementById('industry').value || '';
+updateStockOptionsAndChart(defaultIndustry, '');
+>>>>>>> parent of 2bc2f33 (1)
