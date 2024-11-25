@@ -360,21 +360,13 @@ fetchStockDataSafely('2330.TW')
     });
 }
 
-// 更新股票選項後更新圖表
-function updateStockOptionsAndChart(industry, searchText) {
-    updateStockOptions(industry, searchText);
-    const stockSelect = document.getElementById('stock');
-    if (stockSelect.options.length > 0) {
-        updateCharts(stockSelect.value);
-    }
-}
-
+// 事件監聽器
 document.getElementById('search').addEventListener('input', (e) => {
-    updateStockOptionsAndChart(document.getElementById('industry').value, e.target.value);
+    updateStockOptions(document.getElementById('industry').value, e.target.value);
 });
 
 document.getElementById('industry').addEventListener('change', (e) => {
-    updateStockOptionsAndChart(e.target.value, document.getElementById('search').value);
+    updateStockOptions(e.target.value, document.getElementById('search').value);
 });
 
 document.getElementById('stock').addEventListener('change', (e) => {
@@ -393,5 +385,10 @@ document.getElementById('confidence').addEventListener('input', (e) => {
 
 // 初始化
 const defaultIndustry = document.getElementById('industry').value || '';
+<<<<<<< HEAD
 updateStockOptionsAndChart(defaultIndustry, '');
 >>>>>>> parent of 2bc2f33 (1)
+=======
+updateStockOptions(defaultIndustry, '');
+updateCharts('2330');
+>>>>>>> parent of 13addc9 (1)
