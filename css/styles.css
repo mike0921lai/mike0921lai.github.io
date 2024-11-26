@@ -5,10 +5,19 @@ body {
     padding: 20px;
     line-height: 1.6;
 }
+.container {
+    display: flex;
+    gap: 20px;
+}
+.stock-list, .analysis-section {
+    flex: 1;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+}
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
 }
 table, th, td {
     border: 1px solid #ddd;
@@ -22,11 +31,21 @@ th {
     position: sticky;
     top: 0;
 }
-#industryFilter, #searchInput {
+#stockListSearch, #industryFilter {
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
 }
-.hidden {
-    display: none;
+#analysisResults {
+    margin-top: 20px;
+}
+#stockChart {
+    max-width: 100%;
+    height: 400px;
+}
+.stock-row {
+    cursor: pointer;
+}
+.stock-row:hover {
+    background-color: #f0f0f0;
 }
