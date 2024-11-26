@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,44 +8,36 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
-    <div class="container">
-        <h1>台股交易策略分析系統</h1>
-        
-        <div>
-            <label for="stockSelect">選擇股票:</label>
-            <select id="stockSelect">
-                <option value="2330">2330 - 台積電</option>
-                <option value="2317">2317 - 鴻海</option>
-                <option value="2412">2412 - 中華電</option>
-                <option value="2454">2454 - 聯發科</option>
-                <option value="2603">2603 - 長榮</option>
-            </select>
-        </div>
+    <h1>台灣上市上櫃股票清單</h1>
 
-        <div>
-            <label for="holdingPeriod">持有期間（天）:</label>
-            <input type="range" id="holdingPeriod" min="5" max="30" value="10">
-            <span id="holdingPeriodValue">10</span>天
-        </div>
-
-        <div>
-            <label for="confidenceThreshold">信心水準:</label>
-            <input type="range" id="confidenceThreshold" min="0.1" max="0.9" step="0.1" value="0.6">
-            <span id="confidenceThresholdValue">0.6</span>
-        </div>
-
-        <button id="analyzeButton">開始分析</button>
-
-        <div id="analysisResults">
-            <h2>分析結果</h2>
-            <div id="tradingRules"></div>
-            <canvas id="stockChart"></canvas>
-        </div>
+    <div>
+        <input type="text" id="searchInput" placeholder="搜尋股票代碼或名稱">
     </div>
 
+    <div>
+        <select id="industryFilter">
+            <option value="">全部產業</option>
+        </select>
+    </div>
+
+    <table id="stockTable">
+        <thead>
+            <tr>
+                <th>股票代碼</th>
+                <th>股票名稱</th>
+                <th>產業別</th>
+                <th>市場別</th>
+            </tr>
+        </thead>
+        <tbody id="stockTableBody">
+            <!-- 股票資料將動態載入 -->
+        </tbody>
+    </table>
     <script src="js/main.js">
-   
+
     </script>
 </body>
+
 </html>
