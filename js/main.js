@@ -1,177 +1,162 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 股票列表相關元素
-    const stockTableBody = document.getElementById('stockTableBody');
-    const industryFilter = document.getElementById('industryFilter');
-    const stockListSearch = document.getElementById('stockListSearch');
-    const selectedStockInput = document.getElementById('selectedStock');
+// script.js
 
-    // 股票分析相關元素
-    const holdingPeriodInput = document.getElementById('holdingPeriod');
-    const holdingPeriodValue = document.getElementById('holdingPeriodValue');
-    const confidenceThresholdInput = document.getElementById('confidenceThreshold');
-    const confidenceThresholdValue = document.getElementById('confidenceThresholdValue');
-    const analyzeButton = document.getElementById('analyzeButton');
-    const tradingRulesElement = document.getElementById('tradingRules');
-    const stockChart = document.getElementById('stockChart');
+const axios = require('axios');
 
-    // 股票資料 (模擬數據)
-    const stockData = [
-        // 科技業
-        { code: '2330', name: '台積電', industry: '半導體', market: '上市' },
-        { code: '2317', name: '鴻海', industry: '電子零組件', market: '上市' },
-        { code: '2454', name: '聯發科', industry: '半導體', market: '上市' },
-        { code: '3008', name: '大立光', industry: '光電', market: '上市' },
-        
-        // 金融業
-        { code: '2882', name: '國泰金', industry: '金融保險', market: '上市' },
-        { code: '2886', name: '台驊投控', industry: '金融保險', market: '上市' },
-        { code: '5880', name: '合庫金', industry: '金融保險', market: '上市' },
-        
-        // 傳產業
-        { code: '2412', name: '中華電', industry: '電信業', market: '上市' },
-        { code: '1101', name: '台泥', industry: '水泥', market: '上市' },
-        { code: '1102', name: '亞泥', industry: '水泥', market: '上市' },
-        
-        // 服務業
-        { code: '2603', name: '長榮', industry: '航運', market: '上市' },
-        { code: '2609', name: '陽明', industry: '航運', market: '上市' },
-        
-        // 生技醫療
-        { code: '4414', name: '如興', industry: '生技醫療', market: '上櫃' },
-        { code: '6446', name: '藥華藥', industry: '生技醫療', market: '上櫃' },
-        
-        // 電子通路
-        { code: '2416', name: '旺家', industry: '電子通路', market: '上市' },
-        { code: '2347', name: '錸德', industry: '電子通路', market: '上市' },
-        
-        // 其他
-        { code: '2002', name: '中鋼', industry: '鋼鐵', market: '上市' },
-        { code: '1216', name: 'sailed', industry: '紡織', market: '上市' },
-        { code: '2303', name: '聚陽', industry: '紡織', market: '上市' }
-    ];
-
-    // 模擬股票分析數據
-    const mockStockData = {
-        '2330': {
-            historicalPrices: [100, 110, 105, 115, 120, 118, 125, 130, 128, 135],
-            tradingRules: "台積電買進規則：\n- 當股價在 100-120 區間時買入\n- 停損點：95\n- 獲利機率：75%"
-        },
-        '2317': {
-            historicalPrices: [50, 55, 52, 58, 60, 59, 62, 65, 64, 67],
-            tradingRules: "鴻海買進規則：\n- 當股價在 50-60 區間時買入\n- 停損點：47\n- 獲利機率：70%"
-        },
-        // 其他股票的模擬數據
-    };
-
-    // 動態建立產業別篩選選項
-    const industries = [...new Set(stockData.map(stock => stock.industry))];
-    industries.sort().forEach(industry => {
-        const option = document.createElement('option');
-        option.value = industry;
-        option.textContent = industry;
-        industryFilter.appendChild(option);
-    });
-
-    // 渲染股票資料
-    function renderStockData(data) {
-        stockTableBody.innerHTML = '';
-        data.forEach(stock => {
-            const row = document.createElement('tr');
-            row.classList.add('stock-row');
-            row.innerHTML = `
-                <td>${stock.code}</td>
-                <td>${stock.name}</td>
-                <td>${stock.industry}</td>
-                <td>${stock.market}</td>
-            `;
-            row.addEventListener('click', () => {
-                selectedStockInput.value = `${stock.code} - ${stock.name}`;
-            });
-            stockTableBody.appendChild(row);
-        });
+class TWStockCrawler {
+    constructor() {
+        this.TWSE_URL = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY';
+        this.TWSE_OPENAPI_URL = 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL';
+        this.TWSE_INSTITUTIONAL_URL = 'https://www.twse.com.tw/exchangeReport/BFIAUU';
+        this.TWSE_REALTIME_URL = 'https://mis.twse.com.tw/stock/api/getStockInfo.jsp';
+        this.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7'
+        };
     }
 
-    // 篩選功能
-    function filterStocks() {
-        const searchTerm = stockListSearch.value.toLowerCase();
-        const selectedIndustry = industryFilter.value;
-
-        const filteredStocks = stockData.filter(stock => 
-            (selectedIndustry === '' || stock.industry === selectedIndustry) &&
-            (stock.code.includes(searchTerm) || 
-             stock.name.includes(searchTerm) ||
-             stock.industry.includes(searchTerm))
-        );
-
-        renderStockData(filteredStocks);
-    }
-
-    // 更新滑桿顯示值
-    holdingPeriodInput.addEventListener('input', () => {
-        holdingPeriodValue.textContent = holdingPeriodInput.value;
-    });
-
-    confidenceThresholdInput.addEventListener('input', () => {
-        confidenceThresholdValue.textContent = confidenceThresholdInput.value;
-    });
-
-    // 股票分析
-    let chartInstance = null;
-    analyzeButton.addEventListener('click', () => {
-        const selectedStock = selectedStockInput.value.split(' - ')[0];
-        const holdingPeriod = holdingPeriodInput.value;
-        const confidenceThreshold = confidenceThresholdInput.value;
-
-        // 檢查是否有選擇股票
-        if (!selectedStock) {
-            alert('請先選擇一支股票');
-            return;
-        }
-
-        const stockData = mockStockData[selectedStock];
-
-        // 如果沒有模擬數據
-        if (!stockData) {
-            alert('尚無此股票的分析數據');
-            return;
-        }
-
-        // 顯示交易規則
-        tradingRulesElement.innerHTML = `<pre>${stockData.tradingRules}</pre>`;
-
-        // 銷毀先前的圖表實例
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
-
-        // 創建股價走勢圖
-        chartInstance = new Chart(stockChart, {
-            type: 'line',
-            data: {
-                labels: stockData.historicalPrices.map((_, i) => `Day ${i+1}`),
-                datasets: [{
-                    label: '股價走勢',
-                    data: stockData.historicalPrices,
-                    borderColor: 'blue',
-                    backgroundColor: 'rgba(0, 0, 255, 0.1)'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: `${selectedStock} 股票分析`
-                    }
-                }
+    async getHistoricalData(stockId, date) {
+        const url = `${this.TWSE_URL}?response=json&date=${date}&stockNo=${stockId}`;
+        try {
+            const response = await axios.get(url, { headers: this.headers });
+            const data = response.data;
+            if (data.data) {
+                return data.data.map(row => ({
+                    date: row,
+                    volume: parseInt(row[1].replace(/,/g, '')),
+                    value: parseInt(row[2].replace(/,/g, '')),
+                    open: parseFloat(row[3]),
+                    high: parseFloat(row[4]),
+                    low: parseFloat(row[5]),
+                    close: parseFloat(row),
+                    change: parseFloat(row),
+                    transactions: parseInt(row.replace(/,/g, ''))
+                }));
+            } else {
+                return [];
             }
-        });
+        } catch (error) {
+            console.error(`Failed to fetch historical data for ${stockId}:`, error);
+            return [];
+        }
+    }
+
+    async getRealTimeQuote(stockId) {
+        const exCh = `tse_${stockId}.tw`;
+        const url = `${this.TWSE_REALTIME_URL}?ex_ch=${exCh}&_=${new Date().getTime()}`;
+        try {
+            const response = await axios.get(url, { headers: this.headers });
+            const data = response.data;
+            if (data.msgArray && data.msgArray.length > 0) {
+                const stockInfo = data.msgArray;
+                return {
+                    stockId: stockInfo.c,
+                    name: stockInfo.n,
+                    time: stockInfo.t,
+                    price: parseFloat(stockInfo.z),
+                    change: parseFloat(stockInfo.v),
+                    changePercent: parseFloat(stockInfo.w),
+                    volume: parseInt(stockInfo.tv),
+                    best5Asks: this.parseBest5(stockInfo.a, stockInfo.f),
+                    best5Bids: this.parseBest5(stockInfo.b, stockInfo.g)
+                };
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error(`Failed to fetch real-time quote for ${stockId}:`, error);
+            return null;
+        }
+    }
+
+    async getInstitutionalTrades(stockId, date) {
+        const url = `${this.TWSE_INSTITUTIONAL_URL}?response=json&date=${date}&stockNo=${stockId}`;
+        try {
+            const response = await axios.get(url, { headers: this.headers });
+            const data = response.data;
+            if (data.data) {
+                return {
+                    foreignInvestors: parseInt(data.data[4].replace(/,/g, '')),
+                    investmentTrusts: parseInt(data.data[5].replace(/,/g, '')),
+                    dealers: parseInt(data.data.replace(/,/g, ''))
+                };
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error(`Failed to fetch institutional trades for ${stockId}:`, error);
+            return null;
+        }
+    }
+
+    parseBest5(prices, volumes) {
+        if (!prices || !volumes) return [];
+        const priceArr = prices.split('_');
+        const volumeArr = volumes.split('_');
+        return priceArr.map((price, index) => ({
+            price: parseFloat(price),
+            volume: parseInt(volumeArr[index])
+        })).filter(item => !isNaN(item.price) && !isNaN(item.volume));
+    }
+}
+
+// Function to draw the stock chart
+async function drawStockChart(stockId, historicalData) {
+    anychart.onDocumentReady(function() {
+        // Create a stock chart
+        let chart = anychart.stock();
+
+        // Create a data table
+        let dataTable = anychart.data.table();
+        dataTable.addData(historicalData);
+
+        // Map the data
+        let mapping = dataTable.mapAs({ date: 0, value: 6 });
+
+        // Create a plot
+        let plot = chart.plot(0);
+        let series = plot.line(mapping).name(stockId);
+
+        // Set the title
+        chart.title(`Stock Chart for ${stockId}`);
+
+        // Add a scroller
+        chart.scroller().line(mapping);
+
+        // Draw the chart
+        chart.container('container').draw();
     });
+}
 
-    // 監聽篩選事件
-    industryFilter.addEventListener('change', filterStocks);
-    stockListSearch.addEventListener('input', filterStocks);
+// Main function to initialize and fetch data
+async function main() {
+    const crawler = new TWStockCrawler();
+    const stockId = '2330';
+    const date = '20231001';
 
-    // 初始渲染
-    renderStockData(stockData);
-});
+    try {
+        // Fetch historical data
+        const historicalData = await crawler.getHistoricalData(stockId, date);
+        if (!historicalData) {
+            alert('Failed to fetch historical data');
+            return;
+        }
+
+        // Draw the stock chart
+        drawStockChart(stockId, historicalData);
+
+        // Fetch real-time quote
+        const realTimeQuote = await crawler.getRealTimeQuote(stockId);
+        console.log('Real-Time Quote:', realTimeQuote);
+
+        // Fetch institutional trades
+        const institutionalTrades = await crawler.getInstitutionalTrades(stockId, date);
+        console.log('Institutional Trades:', institutionalTrades);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        alert('Error fetching data');
+    }
+}
+
+// Initialize the application
+main();

@@ -1,73 +1,15 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台股交易策略分析系統</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Taiwan Stock Crawler</title>
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-core.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-stock.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.anychart.com/releases/8.11.0/css/anychart-ui.min.css">
 </head>
-
 <body>
-    <h1>台灣股票交易策略分析系統</h1>
-
-    <div class="container">
-        <div class="stock-list">
-            <input type="text" id="stockListSearch" placeholder="搜尋股票代碼或名稱">
-            
-            <select id="industryFilter">
-                <option value="">全部產業</option>
-            </select>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>股票代碼</th>
-                        <th>股票名稱</th>
-                        <th>產業別</th>
-                        <th>市場別</th>
-                    </tr>
-                </thead>
-                <tbody id="stockTableBody">
-                    <!-- 股票資料將動態載入 -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="analysis-section">
-            <h2>股票分析</h2>
-            
-            <div>
-                <label for="selectedStock">已選股票:</label>
-                <input type="text" id="selectedStock" readonly>
-            </div>
-
-            <div>
-                <label for="holdingPeriod">持有期間（天）:</label>
-                <input type="range" id="holdingPeriod" min="5" max="30" value="10">
-                <span id="holdingPeriodValue">10</span>天
-            </div>
-
-            <div>
-                <label for="confidenceThreshold">信心水準:</label>
-                <input type="range" id="confidenceThreshold" min="0.1" max="0.9" step="0.1" value="0.6">
-                <span id="confidenceThresholdValue">0.6</span>
-            </div>
-
-            <button id="analyzeButton">開始分析</button>
-
-            <div id="analysisResults">
-                <h3>分析結果</h3>
-                <div id="tradingRules"></div>
-                <canvas id="stockChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/main.js">
-
-    </script>
+    <div id="container" style="width: 100%; height: 600px;"></div>
+    <script src="script.js"></script>
 </body>
-
 </html>
