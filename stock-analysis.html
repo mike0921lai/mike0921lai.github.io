@@ -17,36 +17,43 @@
         <div class="controls">
             <div class="control-group">
                 <label for="stock-select">選擇股票</label>
-                <select id="stock-select"></select>
+                <select id="stock-select" aria-label="選擇要分析的股票"></select>
             </div>
             
             <div class="control-group">
                 <label for="intervals">區間個數 m：股價劃分區間數</label>
-                <input type="range" id="intervals" min="3" max="10" value="5" step="1">
+                <input type="range" id="intervals" min="3" max="10" value="5" step="1" 
+                       aria-label="設定股價區間數量">
                 <div class="range-value"><span id="intervals-value">5</span></div>
             </div>
             
             <div class="control-group">
                 <label for="holding-period">持有期間 h_time：交易持有天數</label>
-                <input type="range" id="holding-period" min="5" max="30" value="10" step="1">
+                <input type="range" id="holding-period" min="5" max="30" value="10" step="1"
+                       aria-label="設定持有期間���數">
                 <div class="range-value"><span id="holding-period-value">10</span></div>
             </div>
             
             <div class="control-group">
                 <label for="target-profit">目標利潤 targetProfit：期望最低利潤比例</label>
-                <input type="range" id="target-profit" min="0.5" max="1.5" value="0.8" step="0.1">
+                <input type="range" id="target-profit" min="0.5" max="1.5" value="0.8" step="0.1"
+                       aria-label="設定目標利潤比例">
                 <div class="range-value"><span id="target-profit-value">0.8</span></div>
             </div>
             
             <div class="control-group">
                 <label for="confidence">進場門檻 a：判斷進場的信心水準</label>
-                <input type="range" id="confidence" min="0.1" max="0.9" value="0.6" step="0.1">
+                <input type="range" id="confidence" min="0.1" max="0.9" value="0.6" step="0.1"
+                       aria-label="設定進場信心水準">
                 <div class="range-value"><span id="confidence-value">0.6</span></div>
             </div>
 
             <button id="analyze-btn">進行分析</button>
         </div>
 
+        <div id="loading-indicator" class="loading-indicator hidden">分析進行中...</div>
+        <div id="error-message" class="error-message hidden"></div>
+        
         <div class="results">
             <div class="trading-rules" id="trading-rules"></div>
             <div class="charts">
@@ -55,9 +62,7 @@
             </div>
         </div>
     </div>
-    <script src="js/main.js">
-
-    </script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>
