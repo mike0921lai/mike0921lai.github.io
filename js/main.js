@@ -7,8 +7,8 @@ const mockStocks = [
     { code: '2412', name: '中華電信' },
     { code: '2308', name: '台達電子' },
     { code: '2881', name: '富邦金控' },
-    { code: '2303', name: '聯電' }, 
-    { code: '2882', name: '國泰金控'},
+    { code: '2303', name: '聯電' },
+    { code: '2882', name: '國泰金控' },
     { code: '1303', name: '南亞' },
     { code: '2891', name: '中信金控' }
 ];
@@ -77,7 +77,7 @@ const dataCache = new Map();
 
 async function generateAnalysisData(stockCode, params) {
     const cacheKey = `${stockCode}-${JSON.stringify(params)}`;
-    
+
     // 檢查快取
     if (dataCache.has(cacheKey)) {
         const cached = dataCache.get(cacheKey);
@@ -85,7 +85,7 @@ async function generateAnalysisData(stockCode, params) {
             return cached.data;
         }
     }
-    
+
     try {
         const data = await fetchStockData(stockCode, params);
         // 存入快取
@@ -115,7 +115,7 @@ function generateMockData(stockCode, params) {
         const category = code.substring(0, 2);
 
         // Adjust ranges based on stock category
-        switch(category) {
+        switch (category) {
             case "23": // 電子業
                 min = 100;
                 max = 800;
@@ -123,7 +123,7 @@ function generateMockData(stockCode, params) {
                 break;
             case "24": // 半導體
                 min = 200;
-                max = 1000; 
+                max = 1000;
                 vol = 0.06;
                 break;
             case "28": // 金融保險
@@ -265,15 +265,15 @@ function updateTradingRules(data) {
     // 使用 DocumentFragment 優化 DOM 操作
     const fragment = document.createDocumentFragment();
     const container = document.createElement('div');
-    
+
     data.intervals.forEach(interval => {
         const rule = document.createElement('p');
         rule.textContent = `${interval.isBuySignal ? '買進' : '觀望'}規則: ${interval.range}`;
         container.appendChild(rule);
     });
-    
+
     fragment.appendChild(container);
-    
+
     const rulesElement = document.getElementById('trading-rules');
     rulesElement.innerHTML = '';
     rulesElement.appendChild(fragment);
@@ -364,7 +364,7 @@ function exportAnalysisResults() {
 // 增加節流處理避免過度請求
 function throttle(func, limit) {
     let inThrottle;
-    return function(...args) {
+    return function (...args) {
         if (!inThrottle) {
             func.apply(this, args);
             inThrottle = true;
@@ -389,7 +389,7 @@ function initialize() {
     initializeStockSelect();
     ['intervals', 'holding-period', 'target-profit', 'confidence'].forEach(updateRangeValue);
 
-    document.getElementById('analyze-btn').addEventListener('click', 
+    document.getElementById('analyze-btn').addEventListener('click',
         throttle(async () => {
             try {
                 showLoading(true);
@@ -447,20 +447,20 @@ async function loadStockList() {
     try {
         const response = await fetch('https://isin.twse.com.tw/isin/class_main.jsp?market=1&issuetype=1');
         const text = await response.text();
-        
+
         // 解析 HTML 表格資料
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
         const rows = doc.querySelectorAll('tr');
-        
+
         const stockSelect = document.getElementById('stock-select');
-        
+
         rows.forEach(row => {
             const cols = row.querySelectorAll('td');
-            if(cols.length >= 2) {
+            if (cols.length >= 2) {
                 const code = cols[0].textContent.trim();
                 const name = cols[1].textContent.trim();
-                
+
                 const option = document.createElement('option');
                 option.value = code;
                 option.textContent = `${code} ${name}`;
@@ -477,7 +477,7 @@ async function loadStockListByIndustry(industry) {
     try {
         const response = await fetch('https://isin.twse.com.tw/isin/C_public.jsp?strMode=2');
         const text = await response.text();
-        
+
         // 解析 HTML 表格資料
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
@@ -493,7 +493,7 @@ async function loadStockListByIndustry(industry) {
                 if (industryName.includes(industry)) {
                     const code = cols[0].textContent.trim();
                     const name = cols[1].textContent.trim();
-                    
+
                     const option = document.createElement('option');
                     option.value = code;
                     option.textContent = `${code} ${name}`;

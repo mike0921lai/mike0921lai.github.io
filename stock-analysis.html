@@ -8,36 +8,36 @@
     <meta name="keywords" content="台股,交易策略,股市分析,技術分析">
     <meta name="author" content="Your Name">
     <meta name="theme-color" content="#ffffff">
-    
+
     <!-- DNS 預取 -->
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="台股交易策略分析系統">
     <meta property="og:description" content="根據歷史數據生成交易建議">
     <meta property="og:type" content="website">
-    
+
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="台股交易策略分析系統">
     <meta name="twitter:description" content="根據歷史數據生成交易建議">
-    
+
     <title>台股交易策略分析系統</title>
-    
+
     <!-- 資源提示 -->
     <link rel="preload" href="css/styles.css" as="style">
     <link rel="preload" href="js/main.js" as="script">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
-    
+
     <link rel="icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="images/icon-192x192.png">
     <link rel="manifest" href="manifest.json">
-    
+
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 
-   
+
 </head>
 
 <body>
@@ -75,30 +75,33 @@
 
                         <div class="mb-3">
                             <label for="intervals" class="form-label">區間個數 m：股價劃分區間數</label>
-                            <input type="range" class="form-range" id="intervals" min="3" max="10" value="5" step="1" 
-                                   aria-valuemin="3" aria-valuemax="10" aria-valuenow="5">
+                            <input type="range" class="form-range" id="intervals" min="3" max="10" value="5" step="1"
+                                aria-valuemin="3" aria-valuemax="10" aria-valuenow="5">
                             <div class="text-center"><span id="intervals-value" class="badge bg-primary">5</span></div>
                         </div>
 
                         <div class="mb-3">
                             <label for="holding-period" class="form-label">持有期間 h_time：交易持有天數</label>
-                            <input type="range" class="form-range" id="holding-period" min="5" max="30" value="10" step="1"
-                                   aria-valuemin="5" aria-valuemax="30" aria-valuenow="10">
-                            <div class="text-center"><span id="holding-period-value" class="badge bg-primary">10</span></div>
+                            <input type="range" class="form-range" id="holding-period" min="5" max="30" value="10"
+                                step="1" aria-valuemin="5" aria-valuemax="30" aria-valuenow="10">
+                            <div class="text-center"><span id="holding-period-value" class="badge bg-primary">10</span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="target-profit" class="form-label">目標利潤 targetProfit：期望最低利潤比例</label>
-                            <input type="range" class="form-range" id="target-profit" min="0.5" max="1.5" value="0.8" step="0.1"
-                                   aria-valuemin="0.5" aria-valuemax="1.5" aria-valuenow="0.8">
-                            <div class="text-center"><span id="target-profit-value" class="badge bg-primary">0.8</span></div>
+                            <input type="range" class="form-range" id="target-profit" min="0.5" max="1.5" value="0.8"
+                                step="0.1" aria-valuemin="0.5" aria-valuemax="1.5" aria-valuenow="0.8">
+                            <div class="text-center"><span id="target-profit-value" class="badge bg-primary">0.8</span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="confidence" class="form-label">進場門檻 a：判斷進場的信心水準</label>
-                            <input type="range" class="form-range" id="confidence" min="0.1" max="0.9" value="0.6" step="0.1"
-                                   aria-valuemin="0.1" aria-valuemax="0.9" aria-valuenow="0.6">
-                            <div class="text-center"><span id="confidence-value" class="badge bg-primary">0.6</span></div>
+                            <input type="range" class="form-range" id="confidence" min="0.1" max="0.9" value="0.6"
+                                step="0.1" aria-valuemin="0.1" aria-valuemax="0.9" aria-valuenow="0.6">
+                            <div class="text-center"><span id="confidence-value" class="badge bg-primary">0.6</span>
+                            </div>
                         </div>
 
                         <button id="analyze-btn" class="btn btn-primary w-100" accesskey="a">進行分析</button>
@@ -112,7 +115,7 @@
                     <div class="spinner-border spinner-border-sm" aria-hidden="true"></div>
                     分析進行中...
                 </div>
-                
+
                 <div id="error-message" class="alert alert-danger hidden" role="alert"></div>
 
                 <div class="results">
