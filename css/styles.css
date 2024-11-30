@@ -1,10 +1,11 @@
+/* 只保留必要的自訂變數和特殊樣式 */
 :root {
     --primary-color: #2c3e50;
     --secondary-color: #3498db;
     --accent-color: #e74c3c;
-    --bg-color: #f5f6fa;
-    --text-color: #2c3e50;
-    --border-radius: 8px;
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --border-radius: 4px;
 }
 
 * {
@@ -14,21 +15,21 @@
     font-family: "Noto Sans CJK TC", sans-serif;
 }
 
-/* 基本樣式 */
+/* 自訂字體 */
 body {
-    font-family: "微軟正黑體", sans-serif;
+    font-family: "Noto Sans CJK TC", "微軟正黑體", sans-serif;
     line-height: 1.6;
     background-color: var(--bg-color);
     color: var(--text-color);
     margin: 0;
-    padding: 20px;
+    padding: 1.25rem;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
-    background: white;
+    padding: 1.25rem;
+    background: #fff;
     border-radius: var(--border-radius);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
@@ -48,9 +49,9 @@ h1 {
 /* 控制元件樣式 */
 .controls {
     display: grid;
-    gap: 20px;
-    margin: 30px 0;
-    padding: 20px;
+    gap: 1.25rem;
+    margin: 1.875rem 0;
+    padding: 1.25rem;
     background: #f8f9fa;
     border-radius: var(--border-radius);
 }
@@ -58,7 +59,7 @@ h1 {
 .control-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
 }
 
 label {
@@ -75,18 +76,19 @@ select, input[type="range"] {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     background-color: white;
 }
 
 input[type="range"] {
     width: 100%;
     height: 8px;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     background: #ddd;
     outline: none;
 }
 
+/* Range Input 客製化 */
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 20px;
@@ -97,7 +99,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 select, button {
-    padding: 10px 15px;
+    padding: 0.625rem 0.9375rem;
     border-radius: var(--border-radius);
     border: 1px solid #ddd;
 }
@@ -113,7 +115,7 @@ button {
     background-color: #4CAF50;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.3s;
@@ -123,7 +125,7 @@ button {
     background: var(--secondary-color);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 0.75rem 1.5rem;
     cursor: pointer;
     transition: background 0.3s;
 }
@@ -138,7 +140,7 @@ button:hover {
 
 /* 結果區域 */
 .results {
-    margin-top: 30px;
+    margin-top: 1.875rem;
     display: grid;
     gap: 2rem;
 }
@@ -146,14 +148,14 @@ button:hover {
 .trading-rules {
     background-color: #f8f9fa;
     padding: 1rem;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     white-space: pre-line;
 }
 
 .charts {
     display: grid;
-    gap: 20px;
-    margin-top: 20px;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
 }
 
 canvas {
@@ -161,26 +163,26 @@ canvas {
     max-height: 400px;
     background-color: white;
     border-radius: var(--border-radius);
-    padding: 10px;
+    padding: 0.625rem;
 }
 
 /* 載入指示器和錯誤訊息 */
 .loading-indicator {
     text-align: center;
-    padding: 20px;
+    padding: 1.25rem;
     background: rgba(52, 152, 219, 0.1);
     border-radius: var(--border-radius);
 }
 
 .error-message {
     color: var(--accent-color);
-    padding: 10px;
+    padding: 0.625rem;
     background: rgba(231, 76, 60, 0.1);
     border-radius: var(--border-radius);
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* 響應式設計 */
@@ -188,9 +190,9 @@ canvas {
     body {
         padding: 1rem;
     }
-
+    
     .container {
-        padding: 10px;
+        padding: 0.625rem;
     }
     
     .controls {
@@ -199,5 +201,52 @@ canvas {
     
     .charts {
         grid-template-columns: 1fr;
+        flex-direction: column;
     }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+.keyboard-shortcuts {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 0.625rem;
+    border-radius: var(--border-radius);
+    z-index: 1000;
+}
+
+.keyboard-shortcuts.show {
+    display: block !important;
+}
+
+.metric {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.metric h6 {
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.metric span {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+/* 改善載入指示器樣式 */
+#loading-indicator {
+    position: relative;
+    padding: 1rem;
+}
+
+.spinner-border {
+    margin-right: 0.5rem;
 }

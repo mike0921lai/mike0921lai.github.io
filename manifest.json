@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "台股交易策略分析系統",
+  "version": "1.0",
+  "description": "分析台股歷史數據並提供交易建議",
+  
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "web_accessible_resources": [{
+    "resources": [
+      "css/*",
+      "js/*",
+      "images/*"
+    ],
+    "matches": ["<all_urls>"]
+  }],
+
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "css": ["css/styles.css"],
+    "js": ["js/main.js"]
+  }],
+
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  }
+}
