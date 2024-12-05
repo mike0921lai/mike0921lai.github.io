@@ -9,33 +9,99 @@ import requests
 from io import StringIO
 import matplotlib.pyplot as plt
 import random
+import matplotlib
+
+# 在程式碼開頭加入以下設定
+matplotlib.rcParams['font.family'] = ['Microsoft YaHei']  # 使用微軟正黑體
+# 或是 
+matplotlib.rcParams['font.family'] = ['DFKai-SB']  # 使用標楷體
+matplotlib.rcParams['axes.unicode_minus'] = False   # 讓負號正確顯示
+
+# 備用方案:如果上述字型都無法使用,可以嘗試:
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'DFKai-SB', 'SimSun', 'Noto Sans CJK TC']
 
 # 設置中文字型
 plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'sans-serif']
 plt.rcParams['axes.unicode_minus'] = False
 
-def get_stock_list() -> List[Tuple[str, str]]:
-    """取得台股上市股票清單"""
+def get_stock_list(max_retries=3, retry_delay=1) -> List[Tuple[str, str]]:
+    """取得台股上市股票清單，加入重試機制"""
+    default_stocks = [("2330", "台積電"), ("2317", "鴻海"), ("2308", "台達電")]
+    
+    for attempt in range(max_retries):
+        try:
+            url = "https://isin.twse.com.tw/isin/C_public.jsp?strMode=2"
+            response = requests.get(url, timeout=10)
+            response.encoding = 'big5'
+            
+            if response.status_code != 200:
+                raise requests.RequestException(f"HTTP error {response.status_code}")
+                
+            df = pd.read_html(StringIO(response.text))[0]
+            df = df.iloc[2:, [0, 1]]
+            df.columns = ['代碼和名稱', '公司名稱']
+
+            df['股票代碼'] = df['代碼和名稱'].str.split().str[0]
+            df['股票名稱'] = df['代碼和名稱'].str.split().str[1]
+            
+            # 更嚴格的股票代碼驗證
+            mask = df['股票代碼'].str.match(r'^\d{4}$') & df['股票名稱'].notna()
+            df = df[mask]
+            
+            if df.empty:
+                raise ValueError("No valid stock data found")
+                
+            return list(zip(df['股票代碼'].tolist(), df['股票名稱'].tolist()))
+            
+        except Exception as e:
+            logging.warning(f"第 {attempt + 1} 次嘗試取得股票列表失敗: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+            else:
+                logging.error(f"無法取得股票列表，使用預設值: {e}")
+                return default_stocks
+
+def scrape_stock_data():
+    """抓取股票資料並加入錯誤處理與快取機制"""
+    cache_file = 'stock_data_cache.pkl'
+    
+    # 檢查快取
     try:
-        url = "https://isin.twse.com.tw/isin/C_public.jsp?strMode=2"
-        response = requests.get(url, timeout=10)
+        if os.path.exists(cache_file):
+            if time.time() - os.path.getmtime(cache_file) < 86400:  # 24小時內的快取
+                return pd.read_pickle(cache_file)
+    except:
+        pass
+        
+    url = "https://isin.twse.com.tw/isin/C_public.jsp?strMode=2"
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7'
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
         response.encoding = 'big5'
-        df = pd.read_html(StringIO(response.text))[0]
-        df = df.iloc[2:, [0, 1]]  # 只取代碼和名稱欄位
-        df.columns = ['代碼和名稱', '公司名稱']
-
-        # 分離代碼和名稱
-        df['股票代碼'] = df['代碼和名稱'].str.split().str[0]
-        df['股票名稱'] = df['代碼和名稱'].str.split().str[1]
-
-        # 過濾出正確的股票代碼（4位數字）
-        mask = df['股票代碼'].str.match(r'^\d{4}$')
-        df = df[mask]
-
-        return list(zip(df['股票代碼'], df['股票名稱']))
+        
+        df = pd.read_html(response.text)[0]
+        df.columns = ['有價證券代號及名稱', 'ISIN Code', '上市日', '市場別', '產業別', '公司名稱', '備註']
+        df[['代號', '名稱']] = df['有價證券代號及名稱'].str.split('　', n=1, expand=True)
+        df = df[['代號', '名稱', '產業別']].dropna()
+        
+        # 儲存快取
+        df.to_pickle(cache_file)
+        
+        return df
+        
     except Exception as e:
-        print(f"無法取得股票列表：{e}")
-        return [("2330", "台積電"), ("2317", "鴻海")]
+        logging.error(f"抓取股票資料失敗: {str(e)}")
+        # 如果有快取則使用快取
+        if os.path.exists(cache_file):
+            return pd.read_pickle(cache_file)
+        return pd.DataFrame()
 
 @dataclass
 class TradingInterval:
@@ -75,29 +141,44 @@ class GeneticAlgorithm:
         }
 
     def select_parents(self, population: List[str], fitness_values: List[float]) -> Tuple[str, str]:
+        """改進的父代選擇機制"""
         try:
-            valid_indices = [i for i, f in enumerate(fitness_values) 
-                           if not (np.isnan(f) or np.isinf(f))]
+            # 過濾無效的適應度值
+            valid_pairs = [(p, f) for p, f in zip(population, fitness_values)
+                          if not (np.isnan(f) or np.isinf(f))]
             
-            if len(valid_indices) < 2:
+            if len(valid_pairs) < 2:
+                # 如果有效配對不足，隨機選擇
                 return tuple(random.sample(population, 2))
             
-            valid_population = [population[i] for i in valid_indices]
-            valid_fitness = [fitness_values[i] for i in valid_indices]
+            valid_population, valid_fitness = zip(*valid_pairs)
             
+            # 適應度值標準化
             min_fitness = min(valid_fitness)
-            adjusted_fitness = [f - min_fitness + 1e-6 for f in valid_fitness]
+            max_fitness = max(valid_fitness)
             
-            fitness_sum = sum(adjusted_fitness)
-            if fitness_sum <= 0:
+            if max_fitness == min_fitness:
                 return tuple(random.sample(valid_population, 2))
+                
+            normalized_fitness = [(f - min_fitness) / (max_fitness - min_fitness) + 1e-6 
+                                for f in valid_fitness]
             
-            probabilities = [f/fitness_sum for f in adjusted_fitness]
-            parents = list(np.random.choice(valid_population, size=2, p=probabilities))
-            return tuple(parents)
+            # 使用輪盤法選擇父代
+            total_fitness = sum(normalized_fitness)
+            probabilities = [f/total_fitness for f in normalized_fitness]
             
+            selected_indices = np.random.choice(
+                len(valid_population),
+                size=2,
+                p=probabilities,
+                replace=False  # 確保不會選到同一個
+            )
+            
+            return (valid_population[selected_indices[0]], 
+                    valid_population[selected_indices[1]])
+                    
         except Exception as e:
-            print(f"Parent selection error: {e}")
+            logging.error(f"Parent selection error: {e}")
             return tuple(random.sample(population, 2))
 
     def crossover(self, parent1: str, parent2: str) -> Tuple[str, str]:
@@ -167,46 +248,72 @@ class StockAnalyzer:
         self.ga = GeneticAlgorithm(generations=50)  # 減少世代數以加快運算
 
     def fitness_function(self, params: dict) -> float:
+        """改進的適應度計算"""
         try:
-            self.num_intervals = params['intervals']
-            self.holding_period = params['holding_period']
-            self.target_profit_ratio = params['target_profit_ratio']
-            self.confidence_threshold = params['confidence_threshold']
+            # 參數合理性檢查
+            if not all(isinstance(v, (int, float)) for v in params.values()):
+                return float('-inf')
+                
+            self.num_intervals = max(3, min(6, params['intervals']))
+            self.holding_period = max(5, min(25, params['holding_period']))
+            self.target_profit_ratio = max(0.5, min(1.3, params['target_profit_ratio']))
+            self.confidence_threshold = max(0.3, min(0.7, params['confidence_threshold']))
             
             self.analyze_profit_patterns()
             
-            buy_signals = [interval for interval in self.trading_intervals if interval.is_buy_signal]
+            buy_signals = [interval for interval in self.trading_intervals 
+                          if interval.is_buy_signal]
             
             if not buy_signals:
                 return float('-inf')
                 
+            # 計算綜合得分
             total_profit = sum(interval.avg_profit for interval in buy_signals)
             avg_probability = np.mean([interval.profit_probability for interval in buy_signals])
+            avg_sample_size = np.mean([interval.sample_size for interval in buy_signals])
             
-            sample_sizes = [interval.sample_size for interval in buy_signals]
-            avg_sample_size = np.mean(sample_sizes) if sample_sizes else 0
+            # 加入風險調整因子
+            risk_factor = 1.0 - np.std([interval.avg_profit for interval in buy_signals]) / (total_profit + 1e-6)
             
-            score = (total_profit * avg_probability * np.log1p(avg_sample_size))
+            score = (total_profit * avg_probability * np.log1p(avg_sample_size) * max(0.1, risk_factor))
             
-            if np.isnan(score) or np.isinf(score):
-                return float('-inf')
-                
-            return score
+            return float('-inf') if np.isnan(score) or np.isinf(score) else score
             
         except Exception as e:
-            print(f"Fitness calculation error: {e}")
+            logging.error(f"Fitness calculation error: {e}")
             return float('-inf')
 
     def fetch_data(self) -> pd.DataFrame:
-        try:
-            ticker = yf.Ticker(f"{self.symbol}.TW")
-            self.historical_data = ticker.history(period=f"{self.years_of_history}y")
-            if self.historical_data.empty:
-                raise ValueError(f"無法取得股票 {self.symbol} 的資料")
-            return self.historical_data
-        except Exception as e:
-            self.logger.error(f"取得 {self.symbol} 資料時發生錯誤: {str(e)}")
-            raise
+        """改進的資料擷取功能"""
+        max_retries = 3
+        retry_delay = 2
+        
+        for attempt in range(max_retries):
+            try:
+                ticker = yf.Ticker(f"{self.symbol}.TW")
+                data = ticker.history(period=f"{self.years_of_history}y")
+                
+                if data.empty:
+                    raise ValueError(f"無法取得股票 {self.symbol} 的資料")
+                    
+                # 檢查資料品質
+                if len(data) < 20:  # 至少需要20個交易日的資料
+                    raise ValueError(f"股票 {self.symbol} 的資料量不足")
+                    
+                # 檢查是否有遺漏值
+                if data.isnull().any().any():
+                    data = data.fillna(method='ffill').fillna(method='bfill')
+                    
+                self.historical_data = data
+                return self.historical_data
+                
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logging.warning(f"第 {attempt + 1} 次嘗試取得 {self.symbol} 資料失敗: {e}")
+                    time.sleep(retry_delay)
+                else:
+                    logging.error(f"無法取得 {self.symbol} 資料: {e}")
+                    raise
 
     def calculate_price_intervals(self) -> List[Tuple[float, float]]:
         price_range = self.historical_data['High'].max() - self.historical_data['Low'].min()
